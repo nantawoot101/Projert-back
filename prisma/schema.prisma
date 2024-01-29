@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+    User
+    Admin
+}
+
+model User {
+    id                  Int                   @id @default(autoincrement())
+    role                Role
+    first_name          String
+    last_name           String
+    email               String
+    phone               String
+    address             String?
+    username            String
+    password            String
+    order               Order[]
+    shippingInformation ShippingInformation[]
+    cart                Cart?
+}
+
+model Order {
+    id                  Int                  @id @default(autoincrement())
+    order_date          DateTime             @default(now())
+    total_amount        Int                  @default(0)
+    user                User                 @relation(fields: [userId], references: [id])
+    userId              Int                  @map("user_id")
+    orderItems          OrderItems[]
+    shippingInformation ShippingInformation?
+    Payments            Payments?
+}
+
+model OrderItems {
+    id       Int   @id @default(autoincrement())
+    quantity Int   @default(0)
+    subtotal Int   @default(0)
+    order    Order @relation(fields: [orderId], references: [id])
+    orderId  Int   @map("order_id")
+    book     Book  @relation(fields: [bookId], references: [id])
+    bookId   Int   @map("book_id")
+}
+
+model Cart {
+    id            Int  @id @default(autoincrement())
+    cart_quantity Int  @default(0)
+    user          User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    userId        Int  @unique @map("user_id")
+    book          Book @relation(fields: [bookId], references: [id])
+    bookId        Int  @map("book_id")
+}
+
+enum Genre_Name {
+    Everycategory
+}
+
+model Genres {
+    id         Int        @id @default(autoincrement())
+    genre_name Genre_Name @default(Everycategory)
+    book       Book[]
+}
+
+model Book {
+    id             Int          @id @default(autoincrement())
+    book_name      String       @map("book_name")
+    author         String
+    description    String       @default("description")
+    price          Int
+    stock_quantity Int          @default(0) @map("stock_quantity")
+    orderItems     OrderItems[]
+    cart           Cart[]
+    genres         Genres       @relation(fields: [genreId], references: [id])
+    genreId        Int
+}
+
+enum Payment_Method {
+    Pay_on_delivery
+    Bank
+}
+
+model Payments {
+    payments       Int            @id @default(autoincrement())
+    paymentdate    DateTime       @default(now()) @map("payment_date")
+    payment_method Payment_Method @map("payment_method")
+    amount         Int
+    order          Order          @relation(fields: [orderId], references: [id])
+    orderId        Int            @unique @map("order_id")
+}
+
+enum ShippingStatus {
+    SHIPPED
+    IN_TRANSIT
+    DELIVERED
+}
+
+model ShippingInformation {
+    id               Int            @id @default(autoincrement())
+    recipient_name   String
+    shipping_address String
+    phone            Int
+    shipping_date    DateTime       @default(now())
+    estimated_date   DateTime       @default(now())
+    shipping_status  ShippingStatus @default(SHIPPED)
+    user             User           @relation(fields: [userId], references: [id])
+    userId           Int            @map("user_id")
+    order Order @relation(fields: [orderId], references: [id])
+    orderId          Int            @unique @map("order_id")
+}
