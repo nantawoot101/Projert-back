@@ -17,6 +17,7 @@ model User {
     role                Role
     first_name          String
     last_name           String
+    gender              String
     email               String
     phone               String
     address             String?
